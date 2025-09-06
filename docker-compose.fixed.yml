@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  youtube-trends:
+    image: node:18-alpine
+    container_name: youtube-trends-app
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - YOUTUBE_API_KEY=AIzaSyCxX0SJHltky5-u5bGUVxs6I8monl6ivTA
+      - GOOGLE_SHEET_ID=1thBbHkx3OTGcXou6UFYW9iN9fd9Hb2rd-LnwkJj6Pws
+      - GOOGLE_SHEETS_CREDENTIALS_FILE=credentials.json
+    volumes:
+      - youtube-trends-data:/app
+    restart: unless-stopped
+    command: >
+      sh -c "
+        apk add --no-cache git curl &&
+        git clone https://github.com/dmaximenko/rep1.git /tmp/app &&
+        cp -r /tmp/app/* /app/ &&
+        echo '{\"type\":\"service_account\",\"project_id\":\"animated-joy-470407-b9\",\"private_key_id\":\"f4639df2612b79ae37d8840ac30ebf96ebe1d209\",\"private_key\":\"-----BEGIN PRIVATE KEY-----\\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCXkPFCPnUbZDX4\\nOGhMZLgC5AzikRKGssuY5mfjVadZ2Gg2WD82NbSYRLTB0mPjJKosDCypYQDzf0J7\\nSB4KisMSB/hoW1OI7YpGQCVFYPi4W1Wtuj85TQn2LQtEvO72CoT3t4AroCMCpCIF\\nql4pn53UkEjw3iZXy4yX6FzOEYgBs4wu+rXeVyNdNTi2YX632DP7PagDlyMIFLYo\\nU0EL04cxqwDTk3jkGacGqjeVH/LQUWrSRYpmFPM3eAT3I+1aQTV4+2OIqs4LjUJJ\\nNZp8HZtMDqI39sqDAe41ved0+EFUDQq9fofw9ENnhwY+8ASlMrnowPkFX//VIGld\\nyOPcU1gbAgMBAAECggEAF3ZPcoK6nBfiJt+Mfa7lsUTeHcB5TrKkw7F/CXj74/OV\\nBjyY5Gph32RbWtmXrtTBJvpne3zRqd/cSbs7M0SRt9vV/0mL39ltmzxYyKmfNuKk\\nm7UGDne3gA0u/mAE2b99H9+fDqHGaaVAwwHBe84Cn6IKOIcbBmIzDFzi6N9b329P\\n2fkWoanEr4ePJvKw6KzKub/EzdmBYeLy8LEokCyd/CdXQf9HubE85Zgi3NUN5hBD\\n0a3sQ1fXgnzxKzUsne/QeHDLeYznLRrcd9mRkdw1uTRYKStPnlH90K9iJsuSwkzZ\\n6//lJi98f8mTvMAeVhJsY47zlIjSJcq/D280UHFLmQKBgQDHEMmTEcaOiIojZhn6\\nXYvD6g4GFhmoJgCAgxgORrt9Pw5YOxio1MpaQYz8KyxnWZ+P7t2Afb78QafdwL+s\\noLLMqSv8M41wch7gbXdHQQRW0SKPxEGEoJ2VdpHoEOeMVKabxNnzkMU+FBxu1Asu\\n8shOALQT5i37jKTr9WsFkw4zbwKBgQDC6lZdwJGIDgTsuW8P/TE5rIo791/GC65+\\nyG4qLpFiuiE6ajy+a/7dKexxamhcOPFY1Ugk7TQNw3WsHeFxk0PodvRF1o5e78GQ\\njHtxs+zXOzRO3+zee/oBuPWSYAJvjnzCk1uZS1l494MHs3iHHPXNlo+UNYR27nMk\\nH/ad31jgFQKBgC8KgYf2mGRQUcyBsTvf5UpbwgqgKFn6+P1lfUbKYj37q6kf9fjX\\nqCXh/a4NicW2gSVjPgbCMGKuJTwa83CY3QfOJm3HxPHAlhlU5O36qErXywIMT6tG\\nxVZvmZUsgXtA+covn42WNXYxDHMIOshSaRE9y1A0gcNC/iogabT8hkuTAoGAURAU\\nlizkjTWpHMgyM3CF473uKohXnhv4kvCWva2uim2S9nQXB7ZAMlv5wj1qpvHESLtfF\\nAVaFZ5P6xHJI6GtOusd+H+1zmJgt8Gf8jvU9cuX0gzkt0fnNqBm8R/wWBz9DM8kF\\nN2PW+jA2FmXVopuwvqf3XrRDOxNAX63Lay0QUWECgYAyinD/YbiBbb2CCw5cy3EV\\naraFYrSPEQ3juEJkECqEOeW3jE0rRCJxz2IYrQu3MTHrnICl34Y1t625vyTQMjMZ\\n0UvBGOUtO10vlxo9HSl+Yp6+hS//LwjRIc9cKwJV0ghKxQtUU92ARF7m7RQy5B3M\\nbUcucZKxmj0qF0X8dCX9XQ==\\n-----END PRIVATE KEY-----\\n\",\"client_email\":\"saccount@animated-joy-470407-b9.iam.gserviceaccount.com\",\"client_id\":\"102552307313121327796\",\"auth_uri\":\"https://accounts.google.com/o/oauth2/auth\",\"token_uri\":\"https://oauth2.googleapis.com/token\",\"auth_provider_x509_cert_url\":\"https://www.googleapis.com/oauth2/v1/certs\",\"client_x509_cert_url\":\"https://www.googleapis.com/robot/v1/metadata/x509/saccount%40animated-joy-470407-b9.iam.gserviceaccount.com\",\"universe_domain\":\"googleapis.com\"}' > /app/credentials.json &&
+        npm install &&
+        npm start
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  youtube-trends-data:
