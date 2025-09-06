@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Trends to Google Sheets</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .max-results, .sort-criteria {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .max-results select, .sort-criteria select {
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .sort-criteria select {
+            min-width: 180px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .success {
+            background: #51cf66;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .results-section {
+            padding: 30px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .results-count {
+            font-size: 1.2em;
+            color: #495057;
+        }
+
+        .refresh-btn {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .videos-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .videos-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+
+        .videos-table th:hover {
+            background: linear-gradient(135deg, #5a6fd8, #6a4190);
+        }
+
+        .videos-table th.sortable::after {
+            content: ' ↕️';
+            opacity: 0.5;
+            font-size: 0.8em;
+        }
+
+        .videos-table th.sort-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        .videos-table th.sort-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        .videos-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .videos-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .video-title {
+            font-weight: 600;
+            color: #495057;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .video-link {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .video-link:hover {
+            text-decoration: underline;
+        }
+
+        .video-thumbnail {
+            width: 60px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .stats {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .channel-name {
+            color: #495057;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+
+            .videos-table {
+                font-size: 14px;
+            }
+
+            .videos-table th,
+            .videos-table td {
+                padding: 10px 8px;
+            }
+
+            .video-title {
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎥 YouTube Trends</h1>
+            <p>Получайте трендовые видео и сохраняйте их в Google Sheets</p>
+        </div>
+
+        <div class="search-section">
+            <form class="search-form" id="searchForm">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput" 
+                    placeholder="Введите поисковый запрос (например: 'тренды 2024', 'новости', 'технологии')"
+                    required
+                >
+                <div class="max-results">
+                    <label for="maxResults">Количество:</label>
+                    <select id="maxResults">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50" selected>50</option>
+                    </select>
+                </div>
+                <div class="sort-criteria">
+                    <label for="sortOrder">Сортировка:</label>
+                    <select id="sortOrder">
+                        <option value="viewCount">📊 По просмотрам</option>
+                        <option value="relevance">🎯 По релевантности</option>
+                        <option value="date">📅 По дате</option>
+                        <option value="rating">⭐ По рейтингу</option>
+                        <option value="title">🔤 По названию</option>
+                    </select>
+                </div>
+                <button type="submit" class="search-btn" id="searchBtn">
+                    🔍 Найти тренды
+                </button>
+            </form>
+        </div>
+
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <div class="results-header">
+                <div class="results-count" id="resultsCount"></div>
+                <button class="refresh-btn" id="refreshBtn">
+                    🔄 Обновить данные из таблицы
+                </button>
+            </div>
+            <div class="sort-info" style="background: #e3f2fd; padding: 10px; border-radius: 8px; margin: 15px 0; font-size: 14px; color: #1976d2;">
+                💡 <strong>Сортировка:</strong> 
+                <ul style="margin: 5px 0; padding-left: 20px;">
+                    <li><strong>📊 По просмотрам:</strong> самые популярные видео</li>
+                    <li><strong>🎯 По релевантности:</strong> наиболее подходящие по запросу</li>
+                    <li><strong>📅 По дате:</strong> самые свежие видео</li>
+                    <li><strong>⭐ По рейтингу:</strong> видео с лучшими оценками</li>
+                    <li><strong>🔤 По названию:</strong> в алфавитном порядке</li>
+                </ul>
+                Нажмите на заголовки столбцов для дополнительной сортировки в таблице.
+            </div>
+            <div id="videosContainer"></div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            ⏳ Загружаем тренды...
+        </div>
+
+        <div id="messageContainer"></div>
+    </div>
+
+    <script>
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const maxResults = document.getElementById('maxResults');
+        const sortOrder = document.getElementById('sortOrder');
+        const searchBtn = document.getElementById('searchBtn');
+        const loading = document.getElementById('loading');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsCount = document.getElementById('resultsCount');
+        const videosContainer = document.getElementById('videosContainer');
+        const messageContainer = document.getElementById('messageContainer');
+        const refreshBtn = document.getElementById('refreshBtn');
+
+        // Переменные для сортировки
+        let currentVideos = [];
+        let currentSort = { column: null, direction: 'asc' };
+
+        function showMessage(message, type = 'error') {
+            messageContainer.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => {
+                messageContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        function showLoading(show = true) {
+            loading.style.display = show ? 'block' : 'none';
+            searchBtn.disabled = show;
+            if (show) {
+                searchBtn.textContent = '⏳ Загружаем...';
+            } else {
+                searchBtn.textContent = '🔍 Найти тренды';
+            }
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('ru-RU');
+        }
+
+        function sortVideos(videos, column, direction) {
+            return [...videos].sort((a, b) => {
+                let aVal, bVal;
+                
+                switch(column) {
+                    case 'title':
+                        aVal = a.title.toLowerCase();
+                        bVal = b.title.toLowerCase();
+                        break;
+                    case 'channel':
+                        aVal = a.channelTitle.toLowerCase();
+                        bVal = b.channelTitle.toLowerCase();
+                        break;
+                    case 'publishedAt':
+                        aVal = new Date(a.publishedAt);
+                        bVal = new Date(b.publishedAt);
+                        break;
+                    case 'viewCount':
+                        aVal = parseInt(a.viewCount) || 0;
+                        bVal = parseInt(b.viewCount) || 0;
+                        break;
+                    case 'likeCount':
+                        aVal = parseInt(a.likeCount) || 0;
+                        bVal = parseInt(b.likeCount) || 0;
+                        break;
+                    case 'commentCount':
+                        aVal = parseInt(a.commentCount) || 0;
+                        bVal = parseInt(b.commentCount) || 0;
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        function updateSortHeaders(table, currentColumn, currentDirection) {
+            const headers = table.querySelectorAll('th');
+            headers.forEach(header => {
+                header.className = '';
+                if (header.dataset.column) {
+                    header.classList.add('sortable');
+                    if (header.dataset.column === currentColumn) {
+                        header.classList.add(`sort-${currentDirection}`);
+                    }
+                }
+            });
+        }
+
+        function createVideosTable(videos) {
+            if (!videos || videos.length === 0) {
+                return '<p>Видео не найдены</p>';
+            }
+
+            // Сохраняем текущие видео для сортировки
+            currentVideos = videos;
+
+            const table = document.createElement('table');
+            table.className = 'videos-table';
+            
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Превью</th>
+                        <th data-column="title" class="sortable">Название</th>
+                        <th data-column="channel" class="sortable">Канал</th>
+                        <th data-column="publishedAt" class="sortable">Дата</th>
+                        <th data-column="viewCount" class="sortable">Просмотры</th>
+                        <th data-column="likeCount" class="sortable">Лайки</th>
+                        <th data-column="commentCount" class="sortable">Комментарии</th>
+                        <th>Ссылка</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${videos.map(video => `
+                        <tr>
+                            <td>
+                                <img src="${video.thumbnail || ''}" 
+                                     alt="Thumbnail" 
+                                     class="video-thumbnail"
+                                     onerror="this.style.display='none'">
+                            </td>
+                            <td>
+                                <div class="video-title" title="${video.title}">
+                                    ${video.title}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="channel-name">${video.channelTitle}</div>
+                            </td>
+                            <td>
+                                <div class="stats">${formatDate(video.publishedAt)}</div>
+                            </td>
+                            <td>
+                                <div class="stats">${formatNumber(video.viewCount || 0)}</div>
+                            </td>
+                            <td>
+                                <div class="stats">${formatNumber(video.likeCount || 0)}</div>
+                            </td>
+                            <td>
+                                <div class="stats">${formatNumber(video.commentCount || 0)}</div>
+                            </td>
+                            <td>
+                                <a href="${video.url}" target="_blank" class="video-link">
+                                    📺 Открыть
+                                </a>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+
+            // Добавляем обработчики сортировки
+            const sortableHeaders = table.querySelectorAll('th[data-column]');
+            sortableHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const column = header.dataset.column;
+                    let direction = 'asc';
+                    
+                    if (currentSort.column === column && currentSort.direction === 'asc') {
+                        direction = 'desc';
+                    }
+                    
+                    currentSort = { column, direction };
+                    const sortedVideos = sortVideos(currentVideos, column, direction);
+                    
+                    // Обновляем таблицу
+                    const tbody = table.querySelector('tbody');
+                    tbody.innerHTML = sortedVideos.map(video => `
+                        <tr>
+                            <td>
+                                <img src="${video.thumbnail || ''}" 
+                                     alt="Thumbnail" 
+                                     class="video-thumbnail"
+                                     onerror="this.style.display='none'">
+                            </td>
+                            <td>
+                                <div class="video-title" title="${video.title}">
+                                    ${video.title}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="channel-name">${video.channelTitle}</div>
+                            </td>
+                            <td>
+                                <div class="stats">${formatDate(video.publishedAt)}</div>
+                            </td>
+                            <td>
+                                <div class="stats">${formatNumber(video.viewCount || 0)}</div>
+                            </td>
+                            <td>
+                                <div class="stats">${formatNumber(video.likeCount || 0)}</div>
+                            </td>
+                            <td>
+                                <div class="stats">${formatNumber(video.commentCount || 0)}</div>
+                            </td>
+                            <td>
+                                <a href="${video.url}" target="_blank" class="video-link">
+                                    📺 Открыть
+                                </a>
+                            </td>
+                        </tr>
+                    `).join('');
+                    
+                    // Обновляем заголовки
+                    updateSortHeaders(table, column, direction);
+                });
+            });
+
+            return table;
+        }
+
+        async function fetchTrends() {
+            const query = searchInput.value.trim();
+            const max = parseInt(maxResults.value);
+            const order = sortOrder.value;
+
+            if (!query) {
+                showMessage('Пожалуйста, введите поисковый запрос', 'error');
+                return;
+            }
+
+            showLoading(true);
+            resultsSection.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/trends', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        searchQuery: query,
+                        maxResults: max,
+                        order: order
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Ошибка сервера');
+                }
+
+                if (data.success) {
+                    showMessage(
+                        `✅ Успешно найдено ${data.count} видео для "${data.searchQuery}" и сохранено в Google Sheets!`, 
+                        'success'
+                    );
+                    
+                    resultsCount.textContent = `Найдено видео: ${data.count}`;
+                    videosContainer.innerHTML = '';
+                    videosContainer.appendChild(createVideosTable(data.videos));
+                    resultsSection.style.display = 'block';
+                } else {
+                    throw new Error('Неизвестная ошибка');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage(`❌ Ошибка: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function refreshFromSheet() {
+            showLoading(true);
+
+            try {
+                const response = await fetch('/api/sheet-data');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Ошибка загрузки данных');
+                }
+
+                if (data.success && data.data && data.data.length > 1) {
+                    // Skip header row
+                    const videos = data.data.slice(1).map(row => ({
+                        title: row[1] || '',
+                        channelTitle: row[2] || '',
+                        publishedAt: row[3] || '',
+                        viewCount: parseInt(row[4]) || 0,
+                        likeCount: parseInt(row[5]) || 0,
+                        commentCount: parseInt(row[6]) || 0,
+                        url: row[7] || '',
+                        thumbnail: row[8] || ''
+                    }));
+
+                    resultsCount.textContent = `Загружено из таблицы: ${videos.length}`;
+                    videosContainer.innerHTML = '';
+                    videosContainer.appendChild(createVideosTable(videos));
+                    resultsSection.style.display = 'block';
+                    
+                    showMessage('✅ Данные обновлены из Google Sheets!', 'success');
+                } else {
+                    showMessage('📝 Таблица пуста или не содержит данных', 'error');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage(`❌ Ошибка загрузки: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Event listeners
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            fetchTrends();
+        });
+
+        refreshBtn.addEventListener('click', refreshFromSheet);
+
+        // Load data on page load
+        window.addEventListener('load', () => {
+            refreshFromSheet();
+        });
+    </script>
+</body>
+</html>
