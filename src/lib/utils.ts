@@ -9,7 +9,7 @@ export function calculateAverageScore(grades: Grade[]): number {
 
 // Получение статистики по ученику
 export function getStudentStats(student: Student, grades: Grade[]): StudentWithStats {
-  const studentGrades = grades.filter(grade => grade.id === student.id);
+  const studentGrades = grades.filter(grade => grade.studentId === student.id);
   const averageScore = calculateAverageScore(studentGrades);
   
   return {

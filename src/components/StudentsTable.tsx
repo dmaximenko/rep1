@@ -17,6 +17,16 @@ export default function StudentsTable() {
     setLocalRefreshTrigger(refreshTrigger);
   }, [refreshTrigger]);
 
+  // Отладочная информация
+  useEffect(() => {
+    console.log('StudentsTable: grades updated', grades.length, 'grades');
+    console.log('StudentsTable: students with stats', studentsWithStats.map(s => ({
+      name: s.name,
+      totalGrades: s.totalGrades,
+      averageScore: s.averageScore
+    })));
+  }, [grades, studentsWithStats]);
+
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">

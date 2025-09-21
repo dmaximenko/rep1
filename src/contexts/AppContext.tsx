@@ -52,8 +52,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date(),
     };
     
+    console.log('Adding new grade:', newGrade);
+    
     setGrades(prev => {
       const updatedGrades = [...prev, newGrade];
+      console.log('Updated grades array:', updatedGrades.length, 'total grades');
       // Сохраняем в localStorage сразу
       localStorage.setItem('grades', JSON.stringify(updatedGrades));
       return updatedGrades;
