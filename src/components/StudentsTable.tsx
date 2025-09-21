@@ -1,13 +1,21 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/contexts/AppContext';
 import { getAllStudentsWithStats } from '@/lib/utils';
 import { getScoreColor, getScoreBgColor } from '@/lib/utils';
 
 export default function StudentsTable() {
-  const { students, grades } = useApp();
+  const { students, grades, refreshTrigger } = useApp();
+  const [localRefreshTrigger, setLocalRefreshTrigger] = useState(0);
+  
   const studentsWithStats = getAllStudentsWithStats(students, grades);
+
+  // Обновляем локальный триггер при изменении глобального
+  useEffect(() => {
+    setLocalRefreshTrigger(refreshTrigger);
+  }, [refreshTrigger]);
 
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden">

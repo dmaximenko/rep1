@@ -10,6 +10,7 @@ interface AppContextType {
   grades: Grade[];
   addGrade: (gradeData: GradeFormData) => void;
   refreshData: () => void;
+  refreshTrigger: number; // Для принудительного обновления компонентов
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -18,6 +19,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [students, setStudents] = useState<Student[]>(demoStudents);
   const [trainers, setTrainers] = useState<Trainer[]>(demoTrainers);
   const [grades, setGrades] = useState<Grade[]>(demoGrades);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Загружаем данные из localStorage при инициализации
   useEffect(() => {
@@ -50,7 +52,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date(),
     };
     
-    setGrades(prev => [...prev, newGrade]);
+    setGrades(prev => {
+      const updatedGrades = [...prev, newGrade];
+      // Сохраняем в localStorage сразу
+      localStorage.setItem('grades', JSON.stringify(updatedGrades));
+      return updatedGrades;
+    });
+    
+    // Принудительно обновляем компоненты
+    setRefreshTrigger(prev => prev + 1);
   };
 
   const refreshData = () => {
@@ -65,6 +75,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     grades,
     addGrade,
     refreshData,
+    refreshTrigger,
   };
 
   return (

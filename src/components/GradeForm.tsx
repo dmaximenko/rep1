@@ -43,7 +43,8 @@ export default function GradeForm() {
         comment: '',
       });
       
-      alert('Оценка успешно добавлена!');
+      // Показываем уведомление об успехе
+      alert('Оценка успешно добавлена! Таблица обновится автоматически.');
     } catch (error) {
       console.error('Error adding grade:', error);
       alert('Ошибка при добавлении оценки');
