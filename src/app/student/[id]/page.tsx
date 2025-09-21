@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useApp } from '@/contexts/AppContext';
 import { getStudentStats } from '@/lib/utils';
 import { formatDate, getScoreColor, getScoreBgColor } from '@/lib/utils';
+import StudentCharts from '@/components/StudentCharts';
 
 export default function StudentDetailPage() {
   const params = useParams();
@@ -189,21 +190,50 @@ export default function StudentDetailPage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {studentStats.grades
                       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                      .map((grade) => (
+                      .map((grade, index) => (
                       <tr key={grade.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {getTrainerName(grade.trainerId)}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-8 w-8">
+                              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <span className="text-xs font-medium text-blue-600">
+                                  {index + 1}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="ml-3">
+                              <div className="text-sm font-medium text-gray-900">
+                                {getTrainerName(grade.trainerId)}
+                              </div>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getScoreBgColor(grade.score)} ${getScoreColor(grade.score)}`}>
-                            {grade.score}
-                          </span>
+                          <div className="flex items-center">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${getScoreBgColor(grade.score)} ${getScoreColor(grade.score)}`}>
+                              {grade.score}
+                            </span>
+                            <div className="ml-2 text-xs text-gray-500">
+                              {grade.score >= 8 ? 'Отлично' : 
+                               grade.score >= 6 ? 'Хорошо' : 
+                               grade.score >= 4 ? 'Удовлетворительно' : 'Неудовлетворительно'}
+                            </div>
+                          </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {grade.comment || '-'}
+                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                          <div className="truncate" title={grade.comment || 'Нет комментария'}>
+                            {grade.comment || (
+                              <span className="text-gray-400 italic">Нет комментария</span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(grade.createdAt)}
+                          <div className="flex flex-col">
+                            <span>{formatDate(grade.createdAt).split(' ')[0]}</span>
+                            <span className="text-xs text-gray-400">
+                              {formatDate(grade.createdAt).split(' ')[1]}
+                            </span>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -217,6 +247,11 @@ export default function StudentDetailPage() {
                 <p className="text-sm mt-2">Оценки появятся здесь после их выставления тренерами</p>
               </div>
             )}
+          </div>
+
+          {/* Графики и аналитика */}
+          <div className="mt-8">
+            <StudentCharts student={studentStats} />
           </div>
         </div>
       </main>
